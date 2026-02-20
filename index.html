@@ -451,22 +451,23 @@
 
             let filteredTrades = currentTab === 'all' ? [...trades] : trades.filter(t => t.category === currentTab);
             
-            // 【新增】動態產生歷史紀錄的過濾下拉選項
+            // 動態產生歷史紀錄的過濾下拉選項
             let historyFilterSelect = document.getElementById('history-filter');
-            let currentFilter = historyFilterSelect.value;
+            let currentFilter = historyFilterSelect ? historyFilterSelect.value : 'all';
             let uniqueCoins = [...new Set(filteredTrades.map(t => t.coin))].sort();
             
-            // 如果選取的標的不在當前頁籤中，就自動跳回「全部標的」
             if (currentFilter !== 'all' && !uniqueCoins.includes(currentFilter)) {
                 currentFilter = 'all';
             }
             
-            let filterOptionsHTML = `<option value="all">全部標的</option>`;
-            uniqueCoins.forEach(coin => {
-                let isSelected = coin === currentFilter ? 'selected' : '';
-                filterOptionsHTML += `<option value="${coin}" ${isSelected}>${coin}</option>`;
-            });
-            historyFilterSelect.innerHTML = filterOptionsHTML;
+            if (historyFilterSelect) {
+                let filterOptionsHTML = `<option value="all">全部標的</option>`;
+                uniqueCoins.forEach(coin => {
+                    let isSelected = coin === currentFilter ? 'selected' : '';
+                    filterOptionsHTML += `<option value="${coin}" ${isSelected}>${coin}</option>`;
+                });
+                historyFilterSelect.innerHTML = filterOptionsHTML;
+            }
 
             let portfolio = {};
             let tradesForDisplay = [];
@@ -503,7 +504,6 @@
 
             const historyBody = document.getElementById('history-body');
 
-            // 【新增】根據下拉選單過濾歷史顯示資料
             let finalHistoryTrades = tradesForDisplay;
             if (currentFilter !== 'all') {
                 finalHistoryTrades = finalHistoryTrades.filter(t => t.coin === currentFilter);
@@ -566,6 +566,7 @@
                 return a.localeCompare(b); 
             });
 
+            // ===== 1. 印出各別資產 =====
             for (let coin of sortedPortfolioKeys) {
                 if(portfolio[coin].amt <= 0 && portfolio[coin].realized === 0) continue; 
                 let itemCurrency = portfolio[coin].category === 'tw_stock' ? 'TWD' : 'USD';
@@ -633,6 +634,7 @@
                 </tr>`;
             }
 
+            // ===== 2. 印出穩定幣 (嚴格限制在 crypto 或 all 頁籤) =====
             if (currentTab === 'crypto' || currentTab === 'all') {
                 let displayStable = globalCurrency === 'USD' ? stableCoinUSD : stableCoinUSD * currentExchangeRate;
                 
@@ -672,6 +674,7 @@
                 </tr>`;
             }
 
+            // ===== 3. 印出台幣現金 (嚴格限制只有在 all 頁籤) =====
             if (currentTab === 'all') {
                 let displayCash = globalCurrency === 'USD' ? (cashTWD / currentExchangeRate) : cashTWD;
                 
